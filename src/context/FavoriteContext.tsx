@@ -33,13 +33,13 @@ export const FavoriteProvider = ({ children }: { children: ReactNode }) => {
     setFavorites(updatedFavorites);
 
     // Show toast message
-    Toast.show({
-      type: 'success',
-      text1: 'Success!',
-      text2: updatedFavorites.includes(id) ? 'Removed from Favorites' : 'Added to Favorites',
-      position: 'bottom',
-      visibilityTime: 2000,
-    });
+    // Toast.show({
+    //   type: 'success',
+    //   text1: 'Success!',
+    //   text2: updatedFavorites.includes(id) ? 'Removed from Favorites' : 'Added to Favorites',
+    //   position: 'bottom',
+    //   visibilityTime: 2000,
+    // });
 
     try {
       await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));

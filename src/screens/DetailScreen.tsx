@@ -16,9 +16,9 @@ interface ArtTool {
   limitedTimeDeal: number;
   description: string;
   ratings: number;
+  comments: string;
 }
 
-// Define navigation prop type
 type DetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailScreen'>;
 
 const DetailScreen = () => {
@@ -88,7 +88,7 @@ const DetailScreen = () => {
           <Text style={styles.deal}>Limited Time Deal: -{(artTool.limitedTimeDeal * 100).toFixed(0)}%</Text>
         )}
         <Text style={styles.description}>{artTool.description}</Text>
-        
+
         <View style={styles.ratingsContainer}>
           <Text style={styles.sectionTitle}>Rating</Text>
           <View style={styles.ratingGroup}>
@@ -96,7 +96,7 @@ const DetailScreen = () => {
             <AntDesign name="star" size={24} color="#f1c40f" />
           </View>
         </View>
-        
+
         {/* Add to Favorite Button */}
         <TouchableOpacity
           style={styles.favoriteButton}
@@ -111,6 +111,12 @@ const DetailScreen = () => {
             {favorites.includes(artTool.id) ? 'Remove from Favorites' : 'Add to Favorites'}
           </Text>
         </TouchableOpacity>
+
+        {/* Static Comments Section */}
+        <View style={styles.commentsSection}>
+          <Text style={styles.sectionTitle}>Comments</Text>
+          <Text>{artTool.comments}</Text>
+        </View>
       </View>
     </ScrollView>
   );
@@ -197,6 +203,17 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 16,
     padding: 10,
+  },
+  commentsSection: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
 
