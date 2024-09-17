@@ -1,10 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign } from '@expo/vector-icons';
 import { FavoriteContext } from '../context/FavoriteContext';
+import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from './types/navigationTypes';
 
 interface ArtTool {
   id: string;
@@ -16,8 +18,12 @@ interface ArtTool {
   ratings: number;
 }
 
+// Define navigation prop type
+type DetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailScreen'>;
+
 const DetailScreen = () => {
   const route = useRoute();
+  const navigation = useNavigation<DetailScreenNavigationProp>();
   const { id } = route.params as { id: string };
 
   const [artTool, setArtTool] = useState<ArtTool | null>(null);
@@ -42,6 +48,27 @@ const DetailScreen = () => {
   useEffect(() => {
     fetchArtTool();
   }, [id]);
+
+  // Set the options for the header, including the three-dot menu
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Menu>
+          <MenuTrigger>
+            <AntDesign name="ellipsis1" size={24} color="black" style={{ marginRight: 10 }} />
+          </MenuTrigger>
+          <MenuOptions>
+            <MenuOption onSelect={() => navigation.navigate('Main', { screen: 'Home' })}>
+              <Text style={styles.menuText}>Back to Home</Text>
+            </MenuOption>
+            <MenuOption onSelect={() => navigation.navigate('Main', { screen: 'Favorites' })}>
+              <Text style={styles.menuText}>Go to Favorites</Text>
+            </MenuOption>
+          </MenuOptions>
+        </Menu>
+      ),
+    });
+  }, [navigation]);
 
   if (!artTool) {
     return (
@@ -148,7 +175,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: 8,
   },
-  // Favorite button styles
   favoriteButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,6 +193,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#2c3e50',
+  },
+  menuText: {
+    fontSize: 16,
+    padding: 10,
   },
 });
 

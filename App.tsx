@@ -7,6 +7,8 @@ import HomeScreen from './src/screens/HomeScreen';
 import FavoritesScreen from './src/screens/FavoritesScreen';
 import DetailScreen from './src/screens/DetailScreen';
 import { FavoriteProvider } from './src/context/FavoriteContext';
+import { MenuProvider } from 'react-native-popup-menu';
+import Toast from 'react-native-toast-message';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -42,12 +44,15 @@ function BottomTabs() {
 export default function App() {
   return (
     <FavoriteProvider>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
-          <Stack.Screen name="Detail" component={DetailScreen} options={{ title: 'Detail' }} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <MenuProvider>
+        <NavigationContainer>
+          <Stack.Navigator>
+            <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
+            <Stack.Screen name="Detail" component={DetailScreen} options={{ title: 'Detail' }} />
+          </Stack.Navigator>
+        </NavigationContainer>
+        <Toast />
+      </MenuProvider>
     </FavoriteProvider>
   );
 }

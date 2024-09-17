@@ -1,5 +1,6 @@
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 interface FavoriteContextType {
   favorites: string[];
@@ -30,6 +31,15 @@ export const FavoriteProvider = ({ children }: { children: ReactNode }) => {
       : [...favorites, id];
       
     setFavorites(updatedFavorites);
+
+    // Show toast message
+    Toast.show({
+      type: 'success',
+      text1: 'Success!',
+      text2: updatedFavorites.includes(id) ? 'Removed from Favorites' : 'Added to Favorites',
+      position: 'bottom',
+      visibilityTime: 2000,
+    });
 
     try {
       await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
