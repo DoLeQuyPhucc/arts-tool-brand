@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Modal, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, NavigationProp } from '@react-navigation/native';
-import { Swipeable } from 'react-native-gesture-handler'; // Import Swipeable
+import { Swipeable } from 'react-native-gesture-handler';
 import { AntDesign } from '@expo/vector-icons';
 import { FavoriteContext } from '../context/FavoriteContext';
 
@@ -62,14 +62,20 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
 
   // Update header to include "Edit" button
   useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity onPress={() => setEditMode(!editMode)} style={styles.headerButton}>
-          <Text style={styles.headerButtonText}>{editMode ? 'Cancel' : 'Edit'}</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, editMode]);
+    if (favoriteArtTools.length > 0) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity onPress={() => setEditMode(!editMode)} style={styles.headerButton}>
+            <Text style={styles.headerButtonText}>{editMode ? 'Cancel' : 'Edit'}</Text>
+          </TouchableOpacity>
+        ),
+      });
+    } else {
+      navigation.setOptions({
+        headerRight: () => null,
+      });
+    }
+  }, [navigation, editMode, favoriteArtTools]);
 
   // Delete a single item
   const deleteItem = async (itemId: string) => {
@@ -92,22 +98,41 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
     );
   };
 
+  // Check all items
+  const selectAllItems = () => {
+    if (selectedItems.length === favoriteArtTools.length) {
+      setSelectedItems([]); // Unselect all
+    } else {
+      setSelectedItems(favoriteArtTools.map((tool) => tool.id)); // Select all
+    }
+  };
+
   // Delete selected items
   const deleteSelectedItems = async () => {
     try {
+      
       toggleFavorite(selectedItems);
-
+  
       const updatedFavorites = favoriteArtTools.filter((tool) => !selectedItems.includes(tool.id));
       setFavoriteArtTools(updatedFavorites);
-
+  
       await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites.map((tool) => tool.id)));
-
+  
+      
       setSelectedItems([]);
+  
+      
       setModalVisible(false);
+  
+      
+      if (updatedFavorites.length === 0) {
+        setEditMode(false);
+      }
     } catch (error) {
       console.error('Error deleting items:', error);
     }
   };
+  
 
   // Render delete button for swipe
   const renderDeleteButton = (itemId: string) => (
@@ -146,11 +171,17 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
   return (
     <View style={styles.container}>
       {editMode && (
-        <Button
-          title="Delete Selected"
-          onPress={() => setModalVisible(true)}
-          disabled={selectedItems.length === 0}
-        />
+        <View style={styles.editControls}>
+          <Button
+            title={selectedItems.length === favoriteArtTools.length ? 'Uncheck All' : 'Check All'}
+            onPress={selectAllItems}
+          />
+          <Button
+            title="Delete Selected"
+            onPress={() => setModalVisible(true)}
+            disabled={selectedItems.length === 0}
+          />
+        </View>
       )}
       {favoriteArtTools.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -201,10 +232,11 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 20, fontWeight: 'bold', marginVertical: 10, color: 'gray' },
   emptySubText: { fontSize: 16, color: 'gray', textAlign: 'center', paddingHorizontal: 30 },
   checkboxContainer: { padding: 10 },
-  deleteButton: { justifyContent: 'center', alignItems: 'center', width: 80, backgroundColor: 'red' },
-  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
-  modalView: { width: '80%', backgroundColor: 'white', padding: 20, borderRadius: 10, alignItems: 'center' },
-  modalText: { marginBottom: 15, textAlign: 'center', fontSize: 16 },
+  editControls: { flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 10 },
+  deleteButton: { backgroundColor: 'red', justifyContent: 'center', alignItems: 'center', width: 80, height: '100%' },
+  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalView: { width: 300, padding: 20, backgroundColor: '#fff', borderRadius: 10 },
+  modalText: { fontSize: 16, marginBottom: 20 },
 });
 
 export default FavoritesScreen;

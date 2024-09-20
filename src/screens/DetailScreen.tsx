@@ -16,7 +16,7 @@ interface ArtTool {
   limitedTimeDeal: number;
   description: string;
   ratings: number;
-  comments: string;
+  comments: { userName: string; comment: string }[];
 }
 
 type DetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailScreen'>;
@@ -130,7 +130,16 @@ const DetailScreen = () => {
         {/* Static Comments Section */}
         <View style={styles.commentsSection}>
           <Text style={styles.sectionTitle}>Comments</Text>
-          <Text>{artTool.comments}</Text>
+          {artTool.comments.length > 0 ? (
+            artTool.comments.map((comment, index) => (
+              <View key={index} style={styles.commentContainer}>
+                <Text style={styles.commentUserName}>{comment.userName}:</Text>
+                <Text style={styles.commentText}>{comment.comment}</Text>
+              </View>
+            ))
+          ) : (
+            <Text>No comments yet.</Text>
+          )}
         </View>
       </View>
     </ScrollView>
@@ -226,6 +235,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+  },
+  commentContainer: {
+    flexDirection: 'row',
+    marginTop: 5,
+  },
+  commentUserName: {
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  commentText: {
+    flex: 1,
   },
 });
 
