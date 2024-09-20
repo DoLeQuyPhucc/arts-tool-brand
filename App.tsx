@@ -9,6 +9,7 @@ import DetailScreen from './src/screens/DetailScreen';
 import { FavoriteProvider } from './src/context/FavoriteContext';
 import { MenuProvider } from 'react-native-popup-menu';
 import Toast from 'react-native-toast-message';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -43,16 +44,18 @@ function BottomTabs() {
 
 export default function App() {
   return (
-    <FavoriteProvider>
-      <MenuProvider>
-        <NavigationContainer>
-          <Stack.Navigator>
-            <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
-            <Stack.Screen name="Detail" component={DetailScreen} options={{ title: 'Detail' }} />
-          </Stack.Navigator>
-        </NavigationContainer>
-        <Toast />
-      </MenuProvider>
+    <GestureHandlerRootView>
+      <FavoriteProvider>
+        <MenuProvider>
+          <NavigationContainer>
+            <Stack.Navigator>
+              <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
+              <Stack.Screen name="Detail" component={DetailScreen} options={{ title: 'Detail' }} />
+            </Stack.Navigator>
+          </NavigationContainer>
+          <Toast />
+        </MenuProvider>
     </FavoriteProvider>
+    </GestureHandlerRootView>  
   );
 }

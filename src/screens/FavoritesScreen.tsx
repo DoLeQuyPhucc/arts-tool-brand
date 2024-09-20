@@ -1,10 +1,9 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Modal, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
-import GestureRecognizer from 'react-native-swipe-gestures';
+import { useFocusEffect, NavigationProp } from '@react-navigation/native';
+import { Swipeable } from 'react-native-gesture-handler'; // Import Swipeable
 import { AntDesign } from '@expo/vector-icons';
-import { NavigationProp } from '@react-navigation/native';
 import { FavoriteContext } from '../context/FavoriteContext';
 
 interface ArtTool {
@@ -17,7 +16,6 @@ interface ArtTool {
 
 const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [favoriteArtTools, setFavoriteArtTools] = useState<ArtTool[]>([]);
-  const [showDeleteIcon, setShowDeleteIcon] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -51,10 +49,29 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
   useFocusEffect(
     React.useCallback(() => {
       loadFavorites();
+
+      // Reset edit mode when screen gains focus
+      setEditMode(false);
+
+      // Cleanup function
+      return () => {
+        setEditMode(false);
+      };
     }, [])
   );
 
-  // Delete a single item by swipe
+  // Update header to include "Edit" button
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setEditMode(!editMode)} style={styles.headerButton}>
+          <Text style={styles.headerButtonText}>{editMode ? 'Cancel' : 'Edit'}</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, editMode]);
+
+  // Delete a single item
   const deleteItem = async (itemId: string) => {
     try {
       const updatedFavorites = favoriteArtTools.filter((tool) => tool.id !== itemId);
@@ -78,19 +95,13 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
   // Delete selected items
   const deleteSelectedItems = async () => {
     try {
-      // Toggle favorite for each selected item
-      selectedItems.forEach((itemId) => {
-        toggleFavorite(itemId);
-      });
-  
-      // Update the favoriteArtTools list
+      toggleFavorite(selectedItems);
+
       const updatedFavorites = favoriteArtTools.filter((tool) => !selectedItems.includes(tool.id));
       setFavoriteArtTools(updatedFavorites);
-  
-      // Save the updated list to AsyncStorage
+
       await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites.map((tool) => tool.id)));
-  
-      // Clear the selected items and close the modal
+
       setSelectedItems([]);
       setModalVisible(false);
     } catch (error) {
@@ -98,40 +109,42 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
     }
   };
 
+  // Render delete button for swipe
+  const renderDeleteButton = (itemId: string) => (
+    <TouchableOpacity onPress={() => deleteItem(itemId)} style={styles.deleteButton}>
+      <AntDesign name="delete" size={24} color="white" />
+    </TouchableOpacity>
+  );
+
   // Render each art tool item with swipe and checkbox support
   const renderArtTool = ({ item }: { item: ArtTool }) => (
-    <GestureRecognizer
-      onSwipeLeft={() => setShowDeleteIcon(item.id)}
-      onSwipeRight={() => setShowDeleteIcon(null)}
-      style={styles.card}
+    <Swipeable
+      renderRightActions={() => renderDeleteButton(item.id)}
+      friction={2}
+      overshootRight={false}
     >
-      <View style={styles.cardContent}>
-        {editMode && (
-          <TouchableOpacity onPress={() => toggleSelectItem(item.id)} style={styles.checkboxContainer}>
-            <AntDesign name={selectedItems.includes(item.id) ? 'checksquare' : 'checksquareo'} size={24} color="black" />
+      <View style={styles.card}>
+        <View style={styles.cardContent}>
+          {editMode && (
+            <TouchableOpacity onPress={() => toggleSelectItem(item.id)} style={styles.checkboxContainer}>
+              <AntDesign name={selectedItems.includes(item.id) ? 'checksquare' : 'checksquareo'} size={24} color="black" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={() => navigation.navigate('Detail', { id: item.id })} style={styles.infoContainer}>
+            <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover" />
+            <View style={styles.info}>
+              <Text style={styles.artName}>{item.artName}</Text>
+              <Text style={styles.price}>${item.price}</Text>
+              {item.limitedTimeDeal > 0 && <Text style={styles.deal}>-{item.limitedTimeDeal}%</Text>}
+            </View>
           </TouchableOpacity>
-        )}
-        <TouchableOpacity onPress={() => navigation.navigate('Detail', { id: item.id })} style={styles.infoContainer}>
-          <Image source={{ uri: item.image }} style={styles.image} resizeMode="cover" />
-          <View style={styles.info}>
-            <Text style={styles.artName}>{item.artName}</Text>
-            <Text style={styles.price}>${item.price}</Text>
-            {item.limitedTimeDeal > 0 && <Text style={styles.deal}>-{item.limitedTimeDeal}%</Text>}
-          </View>
-        </TouchableOpacity>
-        {/* Show the trash icon when the user swipes left */}
-        {showDeleteIcon === item.id && (
-          <TouchableOpacity onPress={() => deleteItem(item.id)} style={styles.deleteIcon}>
-            <AntDesign name="delete" size={24} color="red" />
-          </TouchableOpacity>
-        )}
+        </View>
       </View>
-    </GestureRecognizer>
+    </Swipeable>
   );
 
   return (
     <View style={styles.container}>
-      <Button title={editMode ? 'Cancel' : 'Edit'} onPress={() => setEditMode(!editMode)} />
       {editMode && (
         <Button
           title="Delete Selected"
@@ -154,7 +167,6 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
         />
       )}
 
-      {/* Modal for deleting selected items */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -175,6 +187,8 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  headerButton: { marginRight: 15 },
+  headerButtonText: { color: '#007BFF', fontSize: 16 },
   card: { marginVertical: 8, backgroundColor: '#f8f8f8' },
   cardContent: { flexDirection: 'row', alignItems: 'center', padding: 10 },
   infoContainer: { flex: 1, flexDirection: 'row', alignItems: 'center' },
@@ -187,10 +201,10 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 20, fontWeight: 'bold', marginVertical: 10, color: 'gray' },
   emptySubText: { fontSize: 16, color: 'gray', textAlign: 'center', paddingHorizontal: 30 },
   checkboxContainer: { padding: 10 },
-  deleteIcon: { paddingHorizontal: 10 },
+  deleteButton: { justifyContent: 'center', alignItems: 'center', width: 80, backgroundColor: 'red' },
   modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
-  modalView: { backgroundColor: 'white', padding: 20, borderRadius: 10, alignItems: 'center' },
-  modalText: { marginBottom: 15, textAlign: 'center' },
+  modalView: { width: '80%', backgroundColor: 'white', padding: 20, borderRadius: 10, alignItems: 'center' },
+  modalText: { marginBottom: 15, textAlign: 'center', fontSize: 16 },
 });
 
 export default FavoritesScreen;

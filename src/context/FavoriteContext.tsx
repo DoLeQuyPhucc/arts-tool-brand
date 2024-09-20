@@ -4,7 +4,7 @@ import Toast from 'react-native-toast-message';
 
 interface FavoriteContextType {
   favorites: string[];
-  toggleFavorite: (id: string) => void;
+  toggleFavorite: (id: string | string[]) => void; // Accept both single ID and array of IDs
 }
 
 export const FavoriteContext = createContext<FavoriteContextType | undefined>(undefined);
@@ -24,28 +24,28 @@ export const FavoriteProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Toggle favorite status
-  const toggleFavorite = async (id: string) => {
-    const updatedFavorites = favorites.includes(id)
-      ? favorites.filter(favId => favId !== id)
-      : [...favorites, id];
-      
-    setFavorites(updatedFavorites);
+  // Toggle favorite status (supports single or multiple IDs)
+  const toggleFavorite = async (id: string | string[]) => {
+    setFavorites((prevFavorites) => {
+      let updatedFavorites;
 
-    // Show toast message
-    // Toast.show({
-    //   type: 'success',
-    //   text1: 'Success!',
-    //   text2: updatedFavorites.includes(id) ? 'Removed from Favorites' : 'Added to Favorites',
-    //   position: 'bottom',
-    //   visibilityTime: 2000,
-    // });
+      if (Array.isArray(id)) {
+        // Handle batch removal
+        updatedFavorites = prevFavorites.filter(favId => !id.includes(favId));
+      } else {
+        // Handle single item toggle
+        updatedFavorites = prevFavorites.includes(id)
+          ? prevFavorites.filter(favId => favId !== id)
+          : [...prevFavorites, id];
+      }
 
-    try {
-      await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
-    } catch (error) {
-      console.error('Error updating favorites:', error);
-    }
+      // Save updated favorites to AsyncStorage
+      AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites)).catch((error) => {
+        console.error('Error updating favorites:', error);
+      });
+
+      return updatedFavorites;
+    });
   };
 
   useEffect(() => {

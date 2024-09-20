@@ -78,6 +78,22 @@ const DetailScreen = () => {
     );
   }
 
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <AntDesign
+          key={i}
+          name={i <= rating ? 'star' : 'staro'}
+          size={24}
+          color="#f1c40f"
+          style={{ marginRight: 4 }}
+        />
+      );
+    }
+    return stars;
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.detailContainer}>
@@ -92,8 +108,7 @@ const DetailScreen = () => {
         <View style={styles.ratingsContainer}>
           <Text style={styles.sectionTitle}>Rating</Text>
           <View style={styles.ratingGroup}>
-            <Text style={styles.ratingValue}>{artTool.ratings} Star{artTool.ratings > 1 ? 's' : ''}</Text>
-            <AntDesign name="star" size={24} color="#f1c40f" />
+            {renderStars(artTool.ratings)}
           </View>
         </View>
 
@@ -125,7 +140,7 @@ const DetailScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f0f0f0',
   },
   loadingContainer: {
     flex: 1,
@@ -134,9 +149,6 @@ const styles = StyleSheet.create({
   },
   detailContainer: {
     padding: 16,
-    backgroundColor: '#f0f0f0',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
   },
   image: {
     width: '100%',
