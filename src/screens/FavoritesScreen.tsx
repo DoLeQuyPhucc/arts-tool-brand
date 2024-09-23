@@ -53,6 +53,9 @@ const FavoritesScreen = ({ navigation }: { navigation: NavigationProp<any> }) =>
       // Reset edit mode when screen gains focus
       setEditMode(false);
 
+      // Reset checkboxes when screen gains focus
+      setSelectedItems([]);
+
       // Cleanup function
       return () => {
         setEditMode(false);

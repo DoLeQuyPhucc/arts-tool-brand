@@ -15,8 +15,8 @@ interface ArtTool {
   image: string;
   limitedTimeDeal: number;
   description: string;
-  ratings: number;
-  comments: { userName: string; comment: string }[];
+  ratings: { userId: string; userName: string; rating: number }[];
+  comments: { userId: string; userName: string; comment: string; date: string }[];
 }
 
 type DetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailScreen'>;
@@ -78,6 +78,13 @@ const DetailScreen = () => {
     );
   }
 
+  // Calculate the average rating
+  const calculateAverageRating = () => {
+    if (artTool.ratings.length === 0) return '0';
+    const totalRating = artTool.ratings.reduce((sum, rating) => sum + rating.rating, 0);
+    return (totalRating / artTool.ratings.length).toFixed(1);
+  };
+
   const renderStars = (rating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -106,9 +113,10 @@ const DetailScreen = () => {
         <Text style={styles.description}>{artTool.description}</Text>
 
         <View style={styles.ratingsContainer}>
-          <Text style={styles.sectionTitle}>Rating</Text>
+          <Text style={styles.sectionTitle}>Average Rating</Text>
           <View style={styles.ratingGroup}>
-            {renderStars(artTool.ratings)}
+            {renderStars(Number(calculateAverageRating()))}
+            <Text style={styles.averageRating}>{calculateAverageRating()} ({artTool.ratings.length} users)</Text>
           </View>
         </View>
 
@@ -127,14 +135,22 @@ const DetailScreen = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Static Comments Section */}
+        {/* Comments Section */}
         <View style={styles.commentsSection}>
           <Text style={styles.sectionTitle}>Comments</Text>
           {artTool.comments.length > 0 ? (
             artTool.comments.map((comment, index) => (
               <View key={index} style={styles.commentContainer}>
-                <Text style={styles.commentUserName}>{comment.userName}:</Text>
+                <View style={styles.commentHeader}>
+                  <Text style={styles.commentUserName}>{comment.userName}</Text>
+                  <Text style={styles.commentDate}>{comment.date}</Text>
+                </View>
                 <Text style={styles.commentText}>{comment.comment}</Text>
+                {artTool.ratings.find(r => r.userId === comment.userId) && (
+                  <View style={styles.commentRating}>
+                    {renderStars(artTool.ratings.find(r => r.userId === comment.userId)?.rating || 0)}
+                  </View>
+                )}
               </View>
             ))
           ) : (
@@ -197,10 +213,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  ratingValue: {
-    fontSize: 18,
+  averageRating: {
+    marginLeft: 8,
+    fontSize: 16,
     fontWeight: '600',
-    marginRight: 8,
   },
   favoriteButton: {
     flexDirection: 'row',
@@ -237,15 +253,26 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   commentContainer: {
+    marginBottom: 16,
+  },
+  commentHeader: {
     flexDirection: 'row',
-    marginTop: 5,
+    justifyContent: 'space-between',
   },
   commentUserName: {
     fontWeight: 'bold',
-    marginRight: 5,
+  },
+  commentDate: {
+    fontStyle: 'italic',
+    color: '#7f8c8d',
   },
   commentText: {
-    flex: 1,
+    marginTop: 4,
+    fontSize: 16,
+  },
+  commentRating: {
+    flexDirection: 'row',
+    marginTop: 8,
   },
 });
 
