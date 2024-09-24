@@ -124,12 +124,16 @@ const HomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
       </View>
 
       {/* Art tools list */}
-      <FlatList
-        data={filteredArtTools}
-        keyExtractor={(item) => item.id}
-        renderItem={renderArtTool}
-        showsVerticalScrollIndicator={false}
-      />
+      {filteredArtTools.length === 0 ? (
+        <Text style={styles.emptyMessage}>No results found</Text>
+      ) : (
+        <FlatList
+          data={filteredArtTools}
+          keyExtractor={(item) => item.id}
+          renderItem={renderArtTool}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 };
@@ -198,7 +202,13 @@ const styles = StyleSheet.create({
   highlight: {
     backgroundColor: 'yellow',
     fontWeight: 'bold',
-  },  
+  },
+  emptyMessage: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#888',
+  },
 });
 
 export default HomeScreen;
